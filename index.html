@@ -48,38 +48,58 @@
             top: 100px;
             left: 0;
             width: 100%;
-            height: 80px;
+            height: 60px;
             z-index: 1;
         }
 
-        .pipe-layout {
+        /* ท่อตรงตลอดแนว */
+        .pipe-main {
             position: absolute;
             top: 100px;
             width: 100%;
-            height: 80px;
-            display: flex;
-            align-items: center;
+            height: 60px;
+            border-top: 3px solid #7f8c8d;
+            border-bottom: 3px solid #7f8c8d;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.3);
             z-index: 2;
             pointer-events: none;
         }
 
-        .pipe-wide {
-            width: 35%;
-            height: 100%;
-            border-top: 3px solid #7f8c8d;
-            border-bottom: 3px solid #7f8c8d;
-            box-sizing: border-box;
-            background: rgba(255,255,255,0.3);
+        /* วาล์วหรี่น้ำ (Gate Valve) แทนตัวต้านทาน */
+        .valve-assembly {
+            position: absolute;
+            left: 55%; /* ตำแหน่งวาล์ว */
+            top: 60px;
+            width: 40px;
+            height: 100px;
+            transform: translateX(-50%);
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .valve-wheel {
+            width: 30px;
+            height: 10px;
+            background: #e67e22;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+        
+        .valve-stem {
+            width: 6px;
+            height: 28px;
+            background: #95a5a6;
         }
 
-        .pipe-narrow {
-            width: 30%;
-            height: 40px;
-            border-top: 3px solid #7f8c8d;
-            border-bottom: 3px solid #7f8c8d;
-            box-sizing: border-box;
-            background: rgba(255,255,255,0.3);
+        .valve-gate {
+            width: 10px;
+            height: 10px; /* จะถูกปรับด้วย JS */
+            background: #d35400;
             transition: height 0.3s;
+            border-radius: 0 0 4px 4px;
         }
 
         /* Manometers (หลอดแก้ว) */
@@ -94,9 +114,10 @@
             z-index: 0;
             transform: translateX(-50%);
         }
-        .m1 { left: 17.5%; }
-        .m2 { left: 50%; }
-        .m3 { left: 82.5%; }
+        /* M1 ต้นทาง, M2 ก่อนวาล์ว, M3 หลังวาล์ว */
+        .m1 { left: 15%; }
+        .m2 { left: 45%; }
+        .m3 { left: 75%; }
 
         .water-column {
             position: absolute;
@@ -110,7 +131,7 @@
         .gauge-group {
             position: absolute;
             width: 100%;
-            top: 185px;
+            top: 175px;
             height: 60px;
             z-index: 3;
         }
@@ -123,9 +144,9 @@
             align-items: center;
             gap: 8px;
         }
-        .gw1 { left: 17.5%; }
-        .gw2 { left: 50%; }
-        .gw3 { left: 82.5%; }
+        .gw1 { left: 15%; }
+        .gw2 { left: 45%; }
+        .gw3 { left: 75%; }
 
         .dial {
             width: 36px;
@@ -187,12 +208,12 @@
             margin-bottom: 20px;
         }
 
-        /* เปลี่ยนเส้นวงจรเป็น SVG เพื่อให้ขยับได้ */
+        /* เส้นทางวงจรไฟฟ้า (SVG สำหรับแอนิเมชันกระแสไฟ) */
         .circuit-svg {
             position: absolute;
             top: 25px;
-            left: 17.5%;
-            width: 65%;
+            left: 15%;
+            width: 70%;
             height: 100px;
             z-index: 1;
             overflow: visible;
@@ -200,28 +221,26 @@
 
         .circuit-path {
             fill: none;
-            stroke: #cbd5e1; /* สีตอนไฟปิด */
+            stroke: #cbd5e1;
             stroke-width: 3;
-            stroke-dasharray: 10 10; /* ความห่างของเส้นประ */
-            rx: 10px; /* มุมโค้ง */
+            stroke-dasharray: 10 10;
+            rx: 10px;
             transition: stroke 0.3s;
         }
 
         .circuit-path.active {
-            stroke: #f1c40f; /* สีเหลืองทองตอนไฟวิ่ง */
-            /* แอนิเมชันจะถูกคุมความเร็วด้วย JS */
+            stroke: #f1c40f;
             animation: flow-elec linear infinite; 
         }
 
         @keyframes flow-elec {
-            /* วิ่งจาก 40 ไป 0 ทำให้ดูเหมือนกระแสวิ่งตามเข็มนาฬิกา */
             from { stroke-dashoffset: 40; } 
             to { stroke-dashoffset: 0; }
         }
 
         .comp-source {
             position: absolute;
-            left: 17.5%;
+            left: 15%;
             top: 75px;
             transform: translate(-50%, -50%);
             background: #e2e8f0;
@@ -237,7 +256,7 @@
 
         .comp-resistor {
             position: absolute;
-            left: 50%;
+            left: 57%; /* จัดให้ตรงกับวาล์วน้ำด้านบน (55% ของท่อ แต่มี offset เล็กน้อย) */
             top: 25px;
             transform: translate(-50%, -50%);
             background: #f6b26b;
@@ -249,7 +268,7 @@
 
         .comp-led {
             position: absolute;
-            right: 17.5%;
+            right: 15%;
             top: 75px;
             transform: translate(50%, -50%);
             width: 45px;
@@ -355,10 +374,13 @@
             
             <canvas id="pipeCanvas"></canvas>
             
-            <div class="pipe-layout">
-                <div class="pipe-wide"></div>
-                <div class="pipe-narrow" id="resistor-pipe"></div>
-                <div class="pipe-wide"></div>
+            <div class="pipe-main"></div>
+            
+            <!-- วาล์วขวางทางน้ำ (แทนตัวต้านทาน) -->
+            <div class="valve-assembly">
+                <div class="valve-wheel"></div>
+                <div class="valve-stem"></div>
+                <div class="valve-gate" id="valve-gate"></div>
             </div>
 
             <!-- เกจวัดความดัน -->
@@ -369,11 +391,11 @@
                 </div>
                 <div class="gauge-wrapper gw2">
                     <div class="dial"><div class="needle" id="ndl2"></div></div>
-                    <div class="gauge-val" id="val2">0.0 V</div>
+                    <div class="gauge-val" id="val2">12.0 V</div>
                 </div>
                 <div class="gauge-wrapper gw3">
                     <div class="dial"><div class="needle" id="ndl3"></div></div>
-                    <div class="gauge-val" id="val3">6.0 V</div>
+                    <div class="gauge-val" id="val3">0.0 V</div>
                 </div>
             </div>
         </div>
@@ -385,7 +407,7 @@
 
         <!-- Electrical Section -->
         <div class="electrical-section">
-            <!-- เส้นทางวงจรไฟฟ้า (SVG สำหรับแอนิเมชันกระแสไฟ) -->
+            <!-- เส้นทางวงจรไฟฟ้า -->
             <svg class="circuit-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                 <rect id="circuit-path" class="circuit-path" x="0" y="0" width="100%" height="100%" vector-effect="non-scaling-stroke"></rect>
             </svg>
@@ -396,19 +418,19 @@
         </div>
 
         <div class="legend">
-            <div class="legend-item"><span class="dot high"></span> High Pressure</div>
-            <div class="legend-item"><span class="dot low"></span> Low Pressure</div>
-            <div class="legend-item"><span class="rect"></span> Constriction/Resistor</div>
+            <div class="legend-item"><span class="dot high"></span> High Pressure (Before Load)</div>
+            <div class="legend-item"><span class="dot low"></span> Low Pressure (After Load)</div>
+            <div class="legend-item"><span class="rect"></span> Resistor / Valve</div>
         </div>
 
         <!-- Dashboard -->
         <div class="dashboard">
             <div class="dash-col">
-                <div class="dash-title">Current (I)</div>
+                <div class="dash-title">Total Current (I)</div>
                 <div class="dash-val" id="dash-i">0.00 A</div>
             </div>
             <div class="dash-col">
-                <div class="dash-title">Voltage Drop</div>
+                <div class="dash-title">Voltage Drop (at Resistor)</div>
                 <div class="dash-val" id="dash-drop">0.00 V</div>
             </div>
             <div class="dash-col">
@@ -451,9 +473,9 @@
         const ndl2 = document.getElementById('ndl2');
         const ndl3 = document.getElementById('ndl3');
 
-        const pipeR = document.getElementById('resistor-pipe');
+        const valveGate = document.getElementById('valve-gate');
         const led = document.getElementById('led');
-        const circuitPath = document.getElementById('circuit-path'); // เส้นวงจรไฟฟ้า
+        const circuitPath = document.getElementById('circuit-path');
 
         const dashI = document.getElementById('dash-i');
         const dashDrop = document.getElementById('dash-drop');
@@ -465,7 +487,7 @@
         
         function resizeCanvas() {
             canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = 80;
+            canvas.height = 60; // ความสูงท่อ
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -480,8 +502,10 @@
             });
         }
 
-        const baseResistance = 2; 
+        // กำหนดความต้านทานพื้นฐานของวงจร (เช่น สายไฟ + หลอด LED)
+        const baseResistance = 1.0; 
         let currentI = 0;
+        let gapHeight = 60; // พื้นที่ว่างที่น้ำลอดผ่านได้
 
         // แปลงค่า Voltage เป็นองศาของเข็มเกจ (-135 ถึง 135 องศา)
         function getRotation(voltage) {
@@ -495,23 +519,28 @@
             textV.innerText = V;
             textR.innerText = R;
 
-            // การคำนวณกฎของโอห์ม
+            // 1. คำนวณกฎของโอห์ม (I = V / R)
             let R_total = baseResistance + R;
             currentI = V / R_total;
+            
+            // 2. คำนวณ Voltage Drop (แรงดันตกคร่อมที่ตัวต้านทานเท่านั้น)
             let V_drop = currentI * R;
             
-            // คำนวณความดันแต่ละจุด (P1, P2, P3)
-            let P1 = V; // ต้นทาง
-            let P3 = V - V_drop - (currentI * (baseResistance/2)); // ปลายทาง
+            // 3. คำนวณความดันแต่ละจุด (แบบถูกต้องตามหลักไฟฟ้า)
+            // - P1: จุดเริ่มต้น (Supply)
+            // - P2: บนสายไฟก่อนเข้าตัวต้านทาน (คงที่, แทบไม่ตก)
+            // - P3: หลังผ่านตัวต้านทาน (แรงดันดิ่งฮวบ)
+            let P1 = V;
+            let wireDrop = currentI * (baseResistance * 0.2); // แรงดันตกในสายไฟนิดหน่อยให้ดูสมจริง
+            let P2 = P1 - wireDrop;
+            if(P2 < 0) P2 = 0;
+            
+            let P3 = P2 - V_drop; // ตกฮวบที่วาล์ว (Resistor)
             if(P3 < 0) P3 = 0;
 
-            // จำลองความดันตกลงบริเวณคอคอด (Venturi Drop)
-            let venturi_loss = currentI * 3.5; 
-            let P2 = P1 - (V_drop * 0.5) - venturi_loss; 
-            if(P2 < 0 || V === 0) P2 = 0; 
-            if(currentI === 0) P2 = P1;
+            if(V === 0) { P1 = 0; P2 = 0; P3 = 0; }
 
-            // อัปเดตตัวหนังสือ
+            // อัปเดต UI หน้าปัด
             dashI.innerText = currentI.toFixed(2) + " A";
             dashDrop.innerText = V_drop.toFixed(2) + " V";
             
@@ -533,24 +562,22 @@
             ndl2.style.transform = `rotate(${getRotation(P2)}deg)`;
             ndl3.style.transform = `rotate(${getRotation(P3)}deg)`;
             
-            // ขนาดท่อ
-            let pipeHeight = 40 - (R * 2.5);
-            if(pipeHeight < 10) pipeHeight = 10;
-            pipeR.style.height = pipeHeight + "px";
+            // เลื่อนแผ่นวาล์วลงมาขวางท่อ (ยิ่ง R มาก วาล์วยิ่งปิดลึก)
+            // ท่อสูง 60px, R=0 -> วาล์ว 0px, R=10 -> วาล์ว 45px
+            let gateDrop = R * 4.5; 
+            valveGate.style.height = gateDrop + "px";
+            gapHeight = 60 - gateDrop; // ช่องว่างที่น้ำผ่านได้
 
             // ควบคุมไฟ LED และ แอนิเมชันกระแสไฟฟ้า
             if(currentI > 0) {
-                // หลอดไฟ LED
-                let glow = Math.min(currentI / (24/2), 1);
+                let glow = Math.min(currentI / (24/1), 1);
                 led.style.background = "#ff3b30";
                 led.style.boxShadow = `0 0 ${glow * 40}px 5px rgba(255, 59, 48, ${glow})`;
 
-                // กระแสไฟฟ้าในเส้นประวงจร (คำนวณความเร็ว ยิ่งกระแสเยอะ ยิ่งใช้เวลาน้อยลง = วิ่งเร็วขึ้น)
                 circuitPath.classList.add('active');
-                let animSpeed = 3 / currentI; // ปรับตัวเลข 3 เพื่อให้เร็ว/ช้าตามต้องการ
+                let animSpeed = 2.5 / currentI; 
                 circuitPath.style.animationDuration = animSpeed + 's';
             } else {
-                // ปิดหลอดไฟและหยุดการไหล
                 led.style.background = "#c0392b";
                 led.style.boxShadow = "none";
                 
@@ -559,20 +586,20 @@
             }
         }
 
-        // แอนิเมชันน้ำไหล (ยังคงเดิม)
+        // แอนิเมชันน้ำไหล
         function drawParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             let w = canvas.width;
-            let narrowStart = w * 0.35;
-            let narrowEnd = w * 0.65;
-            let narrowHeight = parseFloat(pipeR.style.height) || 40;
+            let valveX = w * 0.55; // ตำแหน่งวาล์ว (55%)
+            let valveWidth = 20;
             
             particles.forEach(p => {
                 let speed = currentI * 3 * p.speedOffset;
                 
-                if(p.x > narrowStart && p.x < narrowEnd) {
-                    speed *= (40 / narrowHeight); 
+                // Continuity Equation (Q=Av): น้ำต้องรีดตัววิ่งเร็วขึ้นเฉพาะตอนลอดใต้แผ่นวาล์ว
+                if(p.x > valveX - valveWidth && p.x < valveX + valveWidth) {
+                    speed *= (60 / gapHeight); 
                 }
                 
                 p.x += speed;
@@ -581,14 +608,18 @@
                 let drawY;
                 let pipeCenterY = canvas.height / 2;
                 
-                if(p.x > narrowStart && p.x < narrowEnd) {
-                    let availableHeight = narrowHeight - 8;
-                    drawY = pipeCenterY - (availableHeight/2) + (p.y * availableHeight);
-                    ctx.fillStyle = '#34a853'; 
+                if(p.x > valveX - valveWidth && p.x < valveX + valveWidth) {
+                    // บังคับให้เม็ดน้ำวิ่งลอดใต้แผ่นวาล์ว
+                    drawY = canvas.height - (gapHeight / 2) + (p.y * gapHeight) - (gapHeight * p.y * 0.5); 
+                    ctx.fillStyle = '#f1c40f'; // สีเหลือง (ลอดผ่านความต้านทาน)
+                } else if (p.x >= valveX + valveWidth) {
+                    // หลังวาล์ว (ความดันต่ำ)
+                    drawY = p.y * canvas.height;
+                    ctx.fillStyle = '#34a853'; // สีเขียว
                 } else {
-                    let availableHeight = 72;
-                    drawY = pipeCenterY - (availableHeight/2) + (p.y * availableHeight);
-                    ctx.fillStyle = '#1a73e8'; 
+                    // ก่อนวาล์ว (ความดันสูง)
+                    drawY = p.y * canvas.height;
+                    ctx.fillStyle = '#1a73e8'; // สีฟ้า
                 }
 
                 ctx.beginPath();
