@@ -20,7 +20,7 @@
         .container {
             background: #ffffff;
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             padding: 40px;
@@ -50,6 +50,7 @@
             width: 100%;
             height: 60px;
             z-index: 1;
+            border-radius: 4px;
         }
 
         /* ท่อตรงตลอดแนว */
@@ -61,12 +62,12 @@
             border-top: 3px solid #7f8c8d;
             border-bottom: 3px solid #7f8c8d;
             box-sizing: border-box;
-            background: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05);
             z-index: 2;
             pointer-events: none;
         }
 
-        /* วาล์วหรี่น้ำ (Gate Valve) แทนตัวต้านทาน */
+        /* วาล์วหรี่น้ำ (Gate Valve) แทนตัวต้านทาน 3 ตัว */
         .valve-assembly {
             position: absolute;
             top: 60px;
@@ -78,8 +79,9 @@
             flex-direction: column;
             align-items: center;
         }
-        .v1 { left: 32.5%; }
-        .v2 { left: 67.5%; }
+        .v1 { left: 25%; }
+        .v2 { left: 50%; }
+        .v3 { left: 75%; }
         
         .valve-wheel {
             width: 30px;
@@ -103,7 +105,7 @@
             border-radius: 0 0 4px 4px;
         }
 
-        /* Manometers (หลอดแก้ว) */
+        /* Manometers (หลอดแก้ว 3 หลอด) */
         .manometer {
             position: absolute;
             width: 20px;
@@ -115,9 +117,9 @@
             z-index: 0;
             transform: translateX(-50%);
         }
-        .m1 { left: 15%; }
-        .m2 { left: 50%; }
-        .m3 { left: 85%; }
+        .m1 { left: 12.5%; }
+        .m2 { left: 37.5%; }
+        .m3 { left: 62.5%; }
 
         .water-column {
             position: absolute;
@@ -127,7 +129,7 @@
             transition: height 0.3s ease;
         }
 
-        /* Gauges (เกจวัดความดัน) */
+        /* Gauges (เกจวัดความดัน 3 จุด) */
         .gauge-group {
             position: absolute;
             width: 100%;
@@ -144,9 +146,9 @@
             align-items: center;
             gap: 8px;
         }
-        .gw1 { left: 15%; }
-        .gw2 { left: 50%; }
-        .gw3 { left: 85%; }
+        .gw1 { left: 12.5%; }
+        .gw2 { left: 37.5%; }
+        .gw3 { left: 62.5%; }
 
         .dial {
             width: 36px;
@@ -211,8 +213,8 @@
         .circuit-svg {
             position: absolute;
             top: 25px;
-            left: 15%;
-            width: 70%;
+            left: 12.5%;
+            width: 75%;
             height: 100px;
             z-index: 1;
             overflow: visible;
@@ -239,7 +241,7 @@
 
         .comp-source {
             position: absolute;
-            left: 15%;
+            left: 12.5%;
             top: 75px;
             transform: translate(-50%, -50%);
             background: #e2e8f0;
@@ -258,26 +260,20 @@
             top: 25px;
             transform: translate(-50%, -50%);
             background: #f6b26b;
-            width: 60px;
+            width: 50px;
             height: 25px;
             border-radius: 4px;
             z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
         }
-        .cr1 { left: 32.5%; }
-        .cr2 { left: 67.5%; }
-
-        .comp-led {
-            position: absolute;
-            left: 85%;
-            top: 75px;
-            transform: translate(-50%, -50%);
-            width: 45px;
-            height: 45px;
-            background: #c0392b;
-            border-radius: 50%;
-            z-index: 2;
-            transition: all 0.3s;
-        }
+        .cr1 { left: 25%; }
+        .cr2 { left: 50%; }
+        .cr3 { left: 75%; }
 
         /* --- Legend --- */
         .legend {
@@ -293,15 +289,17 @@
         }
         .legend-item { display: flex; align-items: center; gap: 8px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .dot.high { background: #1a73e8; }
-        .dot.mid { background: #00bcd4; }
-        .dot.low { background: #34a853; }
+        .dot.p1 { background: #1a73e8; }
+        .dot.p2 { background: #00bcd4; }
+        .dot.p3 { background: #8bc34a; }
+        .dot.p4 { background: #34a853; }
         .rect { width: 14px; height: 10px; background: #f6b26b; border-radius: 2px; }
 
         /* --- Dashboard --- */
         .dashboard {
-            display: flex;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
             border-top: 1px solid #eee;
             border-bottom: 1px solid #eee;
             padding: 20px 0;
@@ -314,18 +312,18 @@
 
         /* --- Controls --- */
         .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-            padding: 0 20px;
+            padding: 0 10px;
         }
 
         .control-group {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 15px;
-            flex: 1;
+            gap: 8px;
+            min-width: 0; 
         }
 
         .control-group label {
@@ -335,7 +333,7 @@
         }
 
         input[type="range"] {
-            flex: 1;
+            width: 100%;
             -webkit-appearance: none;
             height: 4px;
             background: #333;
@@ -345,20 +343,21 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 4px;
-            height: 24px;
+            width: 16px;
+            height: 16px;
             background: #333;
+            border-radius: 50%;
             cursor: pointer;
         }
 
         .range-val {
             background: #f1f3f4;
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            min-width: 30px;
             text-align: center;
+            min-width: 35px;
         }
     </style>
 </head>
@@ -377,7 +376,7 @@
             
             <div class="pipe-main"></div>
             
-            <!-- วาล์วขวางทางน้ำ (แทนตัวต้านทาน) 2 จุด -->
+            <!-- วาล์วขวางทางน้ำ 3 จุด -->
             <div class="valve-assembly v1">
                 <div class="valve-wheel"></div>
                 <div class="valve-stem"></div>
@@ -388,16 +387,21 @@
                 <div class="valve-stem"></div>
                 <div class="valve-gate" id="valve-gate2"></div>
             </div>
+            <div class="valve-assembly v3">
+                <div class="valve-wheel"></div>
+                <div class="valve-stem"></div>
+                <div class="valve-gate" id="valve-gate3"></div>
+            </div>
 
-            <!-- เกจวัดความดัน -->
+            <!-- เกจวัดความดัน 3 จุด -->
             <div class="gauge-group">
                 <div class="gauge-wrapper gw1">
                     <div class="dial"><div class="needle" id="ndl1"></div></div>
-                    <div class="gauge-val" id="val1">12.0 V</div>
+                    <div class="gauge-val" id="val1">24.0 V</div>
                 </div>
                 <div class="gauge-wrapper gw2">
                     <div class="dial"><div class="needle" id="ndl2"></div></div>
-                    <div class="gauge-val" id="val2">12.0 V</div>
+                    <div class="gauge-val" id="val2">0.0 V</div>
                 </div>
                 <div class="gauge-wrapper gw3">
                     <div class="dial"><div class="needle" id="ndl3"></div></div>
@@ -413,21 +417,21 @@
 
         <!-- Electrical Section -->
         <div class="electrical-section">
-            <!-- เส้นทางวงจรไฟฟ้า -->
             <svg class="circuit-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                 <rect id="circuit-path" class="circuit-path" x="0" y="0" width="100%" height="100%" vector-effect="non-scaling-stroke"></rect>
             </svg>
             
             <div class="comp-source">V</div>
-            <div class="comp-resistor cr1"></div>
-            <div class="comp-resistor cr2"></div>
-            <div class="comp-led" id="led"></div>
+            <div class="comp-resistor cr1">R1</div>
+            <div class="comp-resistor cr2">R2</div>
+            <div class="comp-resistor cr3">R3</div>
         </div>
 
         <div class="legend">
-            <div class="legend-item"><span class="dot high"></span> High Electrical Potential</div>
-            <div class="legend-item"><span class="dot mid"></span> Medium Potential</div>
-            <div class="legend-item"><span class="dot low"></span> Lower Potential</div>
+            <div class="legend-item"><span class="dot p1"></span> Highest Potential</div>
+            <div class="legend-item"><span class="dot p2"></span> High Potential</div>
+            <div class="legend-item"><span class="dot p3"></span> Medium Potential</div>
+            <div class="legend-item"><span class="dot p4"></span> Lowest Potential</div>
             <div class="legend-item"><span class="rect"></span> Resistor / Valve</div>
         </div>
 
@@ -446,6 +450,10 @@
                 <div class="dash-val" id="dash-drop2">0.00 V</div>
             </div>
             <div class="dash-col">
+                <div class="dash-title">V Drop (R3)</div>
+                <div class="dash-val" id="dash-drop3">0.00 V</div>
+            </div>
+            <div class="dash-col">
                 <div class="dash-title">Status</div>
                 <div class="dash-val" id="dash-status">Normal Flow</div>
             </div>
@@ -455,51 +463,47 @@
         <div class="controls">
             <div class="control-group">
                 <label>Voltage (V)</label>
-                <input type="range" id="sliderV" min="0" max="24" step="1" value="12">
-                <div class="range-val" id="valV">12</div>
+                <input type="range" id="sliderV" min="0" max="24" step="1" value="24">
+                <div class="range-val" id="textV">24</div>
             </div>
             <div class="control-group">
                 <label>Resistor 1 (R1)</label>
-                <input type="range" id="sliderR1" min="0" max="10" step="1" value="5">
-                <div class="range-val" id="valR1">5</div>
+                <input type="range" id="sliderR1" min="0" max="100" step="1" value="100">
+                <div class="range-val" id="textR1">100</div>
             </div>
             <div class="control-group">
                 <label>Resistor 2 (R2)</label>
-                <input type="range" id="sliderR2" min="0" max="10" step="1" value="5">
-                <div class="range-val" id="valR2">5</div>
+                <input type="range" id="sliderR2" min="0" max="100" step="1" value="0">
+                <div class="range-val" id="textR2">0</div>
+            </div>
+            <div class="control-group">
+                <label>Resistor 3 (R3)</label>
+                <input type="range" id="sliderR3" min="0" max="100" step="1" value="0">
+                <div class="range-val" id="textR3">0</div>
             </div>
         </div>
     </div>
 
     <script>
         // DOM Elements
-        const sliderV = document.getElementById('sliderV');
-        const sliderR1 = document.getElementById('sliderR1');
-        const sliderR2 = document.getElementById('sliderR2');
-        const textV = document.getElementById('valV');
-        const textR1 = document.getElementById('valR1');
-        const textR2 = document.getElementById('valR2');
+        const sliderV = document.getElementById('sliderV'), sliderR1 = document.getElementById('sliderR1');
+        const sliderR2 = document.getElementById('sliderR2'), sliderR3 = document.getElementById('sliderR3');
+        const textV = document.getElementById('textV'), textR1 = document.getElementById('textR1');
+        const textR2 = document.getElementById('textR2'), textR3 = document.getElementById('textR3');
         
-        const wc1 = document.getElementById('wc1');
-        const wc2 = document.getElementById('wc2');
-        const wc3 = document.getElementById('wc3');
-        
-        const val1 = document.getElementById('val1');
-        const val2 = document.getElementById('val2');
-        const val3 = document.getElementById('val3');
-        
-        const ndl1 = document.getElementById('ndl1');
-        const ndl2 = document.getElementById('ndl2');
-        const ndl3 = document.getElementById('ndl3');
+        const wc1 = document.getElementById('wc1'), wc2 = document.getElementById('wc2'), wc3 = document.getElementById('wc3');
+        const val1 = document.getElementById('val1'), val2 = document.getElementById('val2'), val3 = document.getElementById('val3');
+        const ndl1 = document.getElementById('ndl1'), ndl2 = document.getElementById('ndl2'), ndl3 = document.getElementById('ndl3');
 
         const valveGate1 = document.getElementById('valve-gate1');
         const valveGate2 = document.getElementById('valve-gate2');
-        const led = document.getElementById('led');
+        const valveGate3 = document.getElementById('valve-gate3');
         const circuitPath = document.getElementById('circuit-path');
 
         const dashI = document.getElementById('dash-i');
         const dashDrop1 = document.getElementById('dash-drop1');
         const dashDrop2 = document.getElementById('dash-drop2');
+        const dashDrop3 = document.getElementById('dash-drop3');
         const dashStatus = document.getElementById('dash-status');
         
         // Canvas Setup
@@ -508,13 +512,13 @@
         
         function resizeCanvas() {
             canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = 60; // ความสูงท่อ
+            canvas.height = 60; 
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
         let particles = [];
-        const numParticles = 75;
+        const numParticles = 120; // เพิ่มจำนวนเม็ดน้ำเพื่อให้ดูขังเต็มท่อ
         for(let i = 0; i < numParticles; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
@@ -523,139 +527,172 @@
             });
         }
 
-        const R_led = 2.0; 
         let currentI = 0;
-        let gapHeight1 = 60; 
-        let gapHeight2 = 60; 
+        let smoothedI = 0; 
+        let gapHeight1 = 60, gapHeight2 = 60, gapHeight3 = 60; 
+        let globalV = 24, globalR1 = 100, globalR2 = 0, globalR3 = 0;
 
-        // แปลงค่า Voltage เป็นองศาของเข็มเกจ (-135 ถึง 135 องศา)
         function getRotation(voltage) {
             return -135 + (voltage / 24) * 270;
         }
 
         function updateLogic() {
-            let V = parseFloat(sliderV.value);
-            let R1 = parseFloat(sliderR1.value);
-            let R2 = parseFloat(sliderR2.value);
+            globalV = parseFloat(sliderV.value);
+            globalR1 = parseFloat(sliderR1.value);
+            globalR2 = parseFloat(sliderR2.value);
+            globalR3 = parseFloat(sliderR3.value);
             
-            textV.innerText = V;
-            textR1.innerText = R1;
-            textR2.innerText = R2;
+            textV.innerText = globalV; 
+            textR1.innerText = globalR1 === 100 ? "Max" : globalR1;
+            textR2.innerText = globalR2 === 100 ? "Max" : globalR2; 
+            textR3.innerText = globalR3 === 100 ? "Max" : globalR3;
 
-            // 1. คำนวณกฎของโอห์ม (I = V / R_total)
-            let R_total = R_led + R1 + R2;
-            currentI = V / R_total;
+            let calcR1 = globalR1 === 100 ? 1000000 : globalR1;
+            let calcR2 = globalR2 === 100 ? 1000000 : globalR2;
+            let calcR3 = globalR3 === 100 ? 1000000 : globalR3;
+
+            let R_total = calcR1 + calcR2 + calcR3;
+            currentI = R_total > 0 ? globalV / R_total : globalV / 0.1;
             
-            // 2. คำนวณ Voltage Drop คร่อมตัวต้านทานที่ปรับค่าได้
-            let V_drop1 = currentI * R1;
-            let V_drop2 = currentI * R2;
+            let V_drop1 = R_total > 0 ? currentI * calcR1 : globalV / 3;
+            let V_drop2 = R_total > 0 ? currentI * calcR2 : globalV / 3;
+            let V_drop3 = R_total > 0 ? currentI * calcR3 : globalV / 3;
             
-            // 3. คำนวณความดัน (ศักย์ไฟฟ้า) แต่ละจุด แบบอุดมคติ
-            let P1 = V; // ต้นทาง (Supply)
-            let P2 = P1 - V_drop1; // หลังผ่าน R1
-            let P3 = P2 - V_drop2; // หลังผ่าน R2
+            let P1 = globalV;                 
+            let P2 = P1 - V_drop1;      
+            let P3 = P2 - V_drop2;      
 
-            if(P3 < 0) P3 = 0;
-            if(V === 0) { P1 = 0; P2 = 0; P3 = 0; }
+            if(globalV === 0) { P1 = 0; P2 = 0; P3 = 0; }
 
-            // อัปเดต UI หน้าปัด
+            // อัปเดต UI 
             dashI.innerText = currentI.toFixed(2) + " A";
             dashDrop1.innerText = V_drop1.toFixed(2) + " V";
             dashDrop2.innerText = V_drop2.toFixed(2) + " V";
+            dashDrop3.innerText = V_drop3.toFixed(2) + " V";
             
             val1.innerText = P1.toFixed(1) + " V";
             val2.innerText = P2.toFixed(1) + " V";
             val3.innerText = P3.toFixed(1) + " V";
             
-            if(V === 0) dashStatus.innerText = "Power Off";
-            else if(R1 + R2 >= 15) dashStatus.innerText = "High Resistance";
+            if(globalV === 0) dashStatus.innerText = "Power Off";
+            else if(globalR1 === 100 || globalR2 === 100 || globalR3 === 100) dashStatus.innerText = "Blocked / Open Circuit";
             else dashStatus.innerText = "Normal Flow";
 
-            // อัปเดตความสูงหลอดแก้ว
             wc1.style.height = (P1 / 24 * 100) + "%";
             wc2.style.height = (P2 / 24 * 100) + "%";
             wc3.style.height = (P3 / 24 * 100) + "%";
 
-            // หมุนเข็มเกจ
             ndl1.style.transform = `rotate(${getRotation(P1)}deg)`;
             ndl2.style.transform = `rotate(${getRotation(P2)}deg)`;
             ndl3.style.transform = `rotate(${getRotation(P3)}deg)`;
             
-            // เลื่อนแผ่นวาล์วลงมาขวางท่อ
-            let gateDrop1 = R1 * 4.5; 
-            valveGate1.style.height = gateDrop1 + "px";
-            gapHeight1 = 60 - gateDrop1; 
+            let gateDrop1 = globalR1 === 100 ? 60 : (globalR1 / 100) * 58; 
+            valveGate1.style.height = gateDrop1 + "px"; gapHeight1 = Math.max(1, 60 - gateDrop1); 
+            
+            let gateDrop2 = globalR2 === 100 ? 60 : (globalR2 / 100) * 58; 
+            valveGate2.style.height = gateDrop2 + "px"; gapHeight2 = Math.max(1, 60 - gateDrop2); 
+            
+            let gateDrop3 = globalR3 === 100 ? 60 : (globalR3 / 100) * 58; 
+            valveGate3.style.height = gateDrop3 + "px"; gapHeight3 = Math.max(1, 60 - gateDrop3); 
 
-            let gateDrop2 = R2 * 4.5; 
-            valveGate2.style.height = gateDrop2 + "px";
-            gapHeight2 = 60 - gateDrop2; 
-
-            // ควบคุมไฟ LED และ แอนิเมชันกระแสไฟฟ้า
-            if(currentI > 0) {
-                let glow = Math.min(currentI / (24/R_led), 1);
-                led.style.background = "#ff3b30";
-                led.style.boxShadow = `0 0 ${glow * 40}px 5px rgba(255, 59, 48, ${glow})`;
-
+            if(currentI > 0.001 && globalV > 0) {
                 circuitPath.classList.add('active');
-                let animSpeed = 2.5 / currentI; 
-                circuitPath.style.animationDuration = animSpeed + 's';
+                circuitPath.style.animationDuration = Math.max(0.1, 2.5 / currentI) + 's';
             } else {
-                led.style.background = "#c0392b";
-                led.style.boxShadow = "none";
-                
                 circuitPath.classList.remove('active');
                 circuitPath.style.animationDuration = '0s';
             }
         }
 
-        // แอนิเมชันน้ำไหล (กระแสคงที่ทั้งวงจร)
+        // แอนิเมชันของเหลว (แก้ไขระบบการหยุดไหลของน้ำ)
         function drawParticles() {
+            smoothedI += (currentI - smoothedI) * 0.1;
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             let w = canvas.width;
-            let v1X = w * 0.325; 
-            let v2X = w * 0.675; 
+            let v1X = w * 0.25; 
+            let v2X = w * 0.50; 
+            let v3X = w * 0.75;
             let valveWidth = 20;
+
+            ctx.fillStyle = 'rgba(26, 115, 232, 0.15)'; ctx.fillRect(0, 0, v1X, canvas.height);
+            ctx.fillStyle = 'rgba(0, 188, 212, 0.15)';  ctx.fillRect(v1X, 0, v2X - v1X, canvas.height);
+            ctx.fillStyle = 'rgba(139, 195, 74, 0.15)'; ctx.fillRect(v2X, 0, v3X - v2X, canvas.height);
+            ctx.fillStyle = 'rgba(52, 168, 83, 0.15)';  ctx.fillRect(v3X, 0, w - v3X, canvas.height);
             
             particles.forEach(p => {
-                // ความเร็วพื้นฐานแปรผันตาม Current I (เท่ากันทั้งท่อ)
-                let speed = currentI * 3 * p.speedOffset;
+                let speed = smoothedI * 3 * p.speedOffset;
                 
                 let inV1 = (p.x > v1X - valveWidth && p.x < v1X + valveWidth);
                 let inV2 = (p.x > v2X - valveWidth && p.x < v2X + valveWidth);
+                let inV3 = (p.x > v3X - valveWidth && p.x < v3X + valveWidth);
 
-                // วิ่งเร็วขึ้นเฉพาะจังหวะมุดลอดใต้แผ่นวาล์ว (รักษา Q คงที่)
-                if(inV1) {
-                    speed *= (60 / gapHeight1); 
-                } else if(inV2) {
-                    speed *= (60 / gapHeight2); 
-                }
+                if(inV1) speed *= (60 / gapHeight1); 
+                else if(inV2) speed *= (60 / gapHeight2); 
+                else if(inV3) speed *= (60 / gapHeight3); 
                 
-                p.x += speed;
-                if(p.x > canvas.width) p.x = 0;
+                // ตรวจสอบว่าในวงจรมีจุดไหนที่บล็อคน้ำอยู่หรือไม่ (R=100)
+                let isBlocked = (globalR1 === 100 || globalR2 === 100 || globalR3 === 100 || globalV === 0);
+
+                if (!isBlocked && smoothedI > 0.005) {
+                    // ถ้าน้ำไหลปกติ
+                    p.x += speed + (Math.random() - 0.5) * 0.2; 
+                    p.y += (Math.random() - 0.5) * 0.01;
+                    
+                    if(p.x > canvas.width) p.x = 0;
+                } else {
+                    // ถ้าน้ำหยุดไหล (กระแสเป็น 0)
+                    // น้ำจะไม่ข้ามโซนไปไหน จะแค่สั่นเบาๆ อยู่กับที่ (Brownian motion)
+                    p.x += (Math.random() - 0.5) * 0.05;
+                    p.y += (Math.random() - 0.5) * 0.005;
+                    
+                    // ป้องกันไม่ให้เม็ดน้ำทะลุข้ามโซนตอนปิดวาล์ว
+                    if (globalR1 === 100 && p.x > v1X) {
+                        // ถ้าเม็ดน้ำหลุดมาอยู่หลังวาล์วที่ปิดไปแล้ว ก็ให้อยู่แค่ในโซนนั้น
+                        if (p.x < v1X + valveWidth) p.x = v1X + valveWidth;
+                    }
+                    if (globalR2 === 100 && p.x > v2X) {
+                        if (p.x < v2X + valveWidth) p.x = v2X + valveWidth;
+                    }
+                    if (globalR3 === 100 && p.x > v3X) {
+                        if (p.x < v3X + valveWidth) p.x = v3X + valveWidth;
+                    }
+                }
+
+                // ตีกรอบให้อยู่ในท่อ
+                if (p.y < 0) p.y = 0;
+                if (p.y > 1) p.y = 1;
+                if (p.x < 0) p.x = canvas.width;
 
                 let drawY;
-                let pipeCenterY = canvas.height / 2;
-                
+                // บังคับให้ลอดใต้แผ่นวาล์ว
                 if(inV1) {
-                    drawY = canvas.height - (gapHeight1 / 2) + (p.y * gapHeight1) - (gapHeight1 * p.y * 0.5); 
-                    ctx.fillStyle = '#f1c40f'; // สีเหลือง (ตอนผ่านโหลด 1)
+                    drawY = canvas.height - gapHeight1 + 4 + (p.y * (gapHeight1 - 8)); 
+                    ctx.fillStyle = '#f1c40f'; 
                 } else if(inV2) {
-                    drawY = canvas.height - (gapHeight2 / 2) + (p.y * gapHeight2) - (gapHeight2 * p.y * 0.5); 
-                    ctx.fillStyle = '#f1c40f'; // สีเหลือง (ตอนผ่านโหลด 2)
-                } else if (p.x >= v2X + valveWidth) {
-                    drawY = p.y * canvas.height;
-                    ctx.fillStyle = '#34a853'; // สีเขียว (ศักย์ไฟฟ้าต่ำสุด)
-                } else if (p.x >= v1X + valveWidth) {
-                    drawY = p.y * canvas.height;
-                    ctx.fillStyle = '#00bcd4'; // สีฟ้าอ่อน (ศักย์ไฟฟ้ากลาง)
+                    drawY = canvas.height - gapHeight2 + 4 + (p.y * (gapHeight2 - 8)); 
+                    ctx.fillStyle = '#f1c40f'; 
+                } else if(inV3) {
+                    drawY = canvas.height - gapHeight3 + 4 + (p.y * (gapHeight3 - 8)); 
+                    ctx.fillStyle = '#f1c40f'; 
                 } else {
-                    drawY = p.y * canvas.height;
-                    ctx.fillStyle = '#1a73e8'; // สีฟ้าเข้ม (ศักย์ไฟฟ้าสูงสุด)
+                    drawY = 4 + p.y * (canvas.height - 8);
+                    if (p.x >= v3X + valveWidth) ctx.fillStyle = '#34a853'; 
+                    else if (p.x >= v2X + valveWidth) ctx.fillStyle = '#8bc34a'; 
+                    else if (p.x >= v1X + valveWidth) ctx.fillStyle = '#00bcd4'; 
+                    else ctx.fillStyle = '#1a73e8'; 
                 }
 
+                // ยืดเม็ดน้ำเวลาไหลเร็วๆ (Motion Blur)
+                let stretch = (!isBlocked && smoothedI > 0.005) ? Math.max(4, speed * 1.5) : 4;
+
                 ctx.beginPath();
-                ctx.arc(p.x, drawY, 4, 0, Math.PI * 2);
+                if(ctx.ellipse) {
+                    ctx.ellipse(p.x, drawY, stretch, 4, 0, 0, Math.PI * 2);
+                } else {
+                    ctx.arc(p.x, drawY, 4, 0, Math.PI * 2);
+                }
                 ctx.fill();
             });
             
@@ -665,6 +702,7 @@
         sliderV.addEventListener('input', updateLogic);
         sliderR1.addEventListener('input', updateLogic);
         sliderR2.addEventListener('input', updateLogic);
+        sliderR3.addEventListener('input', updateLogic);
 
         updateLogic();
         drawParticles();
