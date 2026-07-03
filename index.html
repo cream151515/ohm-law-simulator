@@ -469,7 +469,7 @@
             <div class="control-group">
                 <label>Resistor 1 (R1)</label>
                 <input type="range" id="sliderR1" min="0" max="100" step="1" value="100">
-                <div class="range-val" id="textR1">100</div>
+                <div class="range-val" id="textR1">Max</div>
             </div>
             <div class="control-group">
                 <label>Resistor 2 (R2)</label>
@@ -518,7 +518,7 @@
         resizeCanvas();
 
         let particles = [];
-        const numParticles = 120; // เพิ่มจำนวนเม็ดน้ำเพื่อให้ดูขังเต็มท่อ
+        const numParticles = 80;
         for(let i = 0; i < numParticles; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
@@ -528,7 +528,7 @@
         }
 
         let currentI = 0;
-        let smoothedI = 0; 
+        let smoothedI = 0; // ตัวแปรสำหรับคำนวณแรงเฉื่อย
         let gapHeight1 = 60, gapHeight2 = 60, gapHeight3 = 60; 
         let globalV = 24, globalR1 = 100, globalR2 = 0, globalR3 = 0;
 
@@ -542,15 +542,18 @@
             globalR2 = parseFloat(sliderR2.value);
             globalR3 = parseFloat(sliderR3.value);
             
+            // เปลี่ยน Text ให้เป็น Max เพื่อสื่อถึงวาล์วปิดสนิท / ความต้านทานอนันต์
             textV.innerText = globalV; 
             textR1.innerText = globalR1 === 100 ? "Max" : globalR1;
             textR2.innerText = globalR2 === 100 ? "Max" : globalR2; 
             textR3.innerText = globalR3 === 100 ? "Max" : globalR3;
 
+            // หาก R เป็น 100 ให้ถือว่าค่าคือ "อนันต์" (วงจรเปิด วาล์วปิดสนิท)
             let calcR1 = globalR1 === 100 ? 1000000 : globalR1;
             let calcR2 = globalR2 === 100 ? 1000000 : globalR2;
             let calcR3 = globalR3 === 100 ? 1000000 : globalR3;
 
+            // คำนวณกฎของโอห์ม
             let R_total = calcR1 + calcR2 + calcR3;
             currentI = R_total > 0 ? globalV / R_total : globalV / 0.1;
             
@@ -586,6 +589,7 @@
             ndl2.style.transform = `rotate(${getRotation(P2)}deg)`;
             ndl3.style.transform = `rotate(${getRotation(P3)}deg)`;
             
+            // ถ้าถึง 100 ให้แผ่นวาล์วปิดท่อ 100% เลย (ความสูง 60px)
             let gateDrop1 = globalR1 === 100 ? 60 : (globalR1 / 100) * 58; 
             valveGate1.style.height = gateDrop1 + "px"; gapHeight1 = Math.max(1, 60 - gateDrop1); 
             
@@ -604,8 +608,9 @@
             }
         }
 
-        // แอนิเมชันของเหลว (แก้ไขระบบการหยุดไหลของน้ำ)
+        // แอนิเมชันของเหลว
         function drawParticles() {
+            // สร้างความสมูทของความเร็ว (แรงเฉื่อย)
             smoothedI += (currentI - smoothedI) * 0.1;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -616,11 +621,18 @@
             let v3X = w * 0.75;
             let valveWidth = 20;
 
+            // วาดสีพื้นของเหลว (ให้ดูเหมือนมีน้ำเต็มท่อ)
             ctx.fillStyle = 'rgba(26, 115, 232, 0.15)'; ctx.fillRect(0, 0, v1X, canvas.height);
             ctx.fillStyle = 'rgba(0, 188, 212, 0.15)';  ctx.fillRect(v1X, 0, v2X - v1X, canvas.height);
             ctx.fillStyle = 'rgba(139, 195, 74, 0.15)'; ctx.fillRect(v2X, 0, v3X - v2X, canvas.height);
             ctx.fillStyle = 'rgba(52, 168, 83, 0.15)';  ctx.fillRect(v3X, 0, w - v3X, canvas.height);
             
+            // หาจุดที่โดนบล็อก (วาล์วปิดสนิท เช่น R == 100) ตัวแรกที่เจอ
+            let blockX = w + 100; // ปกติไม่บล็อก
+            if (globalR1 === 100) blockX = v1X - 10;
+            else if (globalR2 === 100) blockX = v2X - 10;
+            else if (globalR3 === 100) blockX = v3X - 10;
+
             particles.forEach(p => {
                 let speed = smoothedI * 3 * p.speedOffset;
                 
@@ -632,38 +644,30 @@
                 else if(inV2) speed *= (60 / gapHeight2); 
                 else if(inV3) speed *= (60 / gapHeight3); 
                 
-                // ตรวจสอบว่าในวงจรมีจุดไหนที่บล็อคน้ำอยู่หรือไม่ (R=100)
-                let isBlocked = (globalR1 === 100 || globalR2 === 100 || globalR3 === 100 || globalV === 0);
-
-                if (!isBlocked && smoothedI > 0.005) {
-                    // ถ้าน้ำไหลปกติ
-                    p.x += speed + (Math.random() - 0.5) * 0.2; 
+                // ถ้าน้ำไหลปกติ (กระแสเกิน 0.005)
+                if (smoothedI > 0.005) {
+                    p.x += speed + (Math.random() - 0.5) * 0.2; // ไหลไปข้างหน้า
                     p.y += (Math.random() - 0.5) * 0.01;
-                    
-                    if(p.x > canvas.width) p.x = 0;
                 } else {
-                    // ถ้าน้ำหยุดไหล (กระแสเป็น 0)
-                    // น้ำจะไม่ข้ามโซนไปไหน จะแค่สั่นเบาๆ อยู่กับที่ (Brownian motion)
+                    // ถ้าน้ำหยุดไหล (กระแสเข้าใกล้ 0)
+                    if (globalV > 0 && p.x < blockX) {
+                        // ถ้ามีแรงดัน (V>0) แต่วาล์วปิด ให้ดันน้ำก่อนหน้าวาล์วไป "กองรวมกัน" ที่หน้าวาล์ว
+                        p.x += Math.random() * 0.4; 
+                        if (p.x > blockX) {
+                            p.x = blockX - (Math.random() * 12); // ชนวาล์วแล้วกองกันไว้
+                        }
+                    }
+                    // สั่นลอยตัวเบาๆ เหมือนของเหลวปกติ
                     p.x += (Math.random() - 0.5) * 0.05;
                     p.y += (Math.random() - 0.5) * 0.005;
-                    
-                    // ป้องกันไม่ให้เม็ดน้ำทะลุข้ามโซนตอนปิดวาล์ว
-                    if (globalR1 === 100 && p.x > v1X) {
-                        // ถ้าเม็ดน้ำหลุดมาอยู่หลังวาล์วที่ปิดไปแล้ว ก็ให้อยู่แค่ในโซนนั้น
-                        if (p.x < v1X + valveWidth) p.x = v1X + valveWidth;
-                    }
-                    if (globalR2 === 100 && p.x > v2X) {
-                        if (p.x < v2X + valveWidth) p.x = v2X + valveWidth;
-                    }
-                    if (globalR3 === 100 && p.x > v3X) {
-                        if (p.x < v3X + valveWidth) p.x = v3X + valveWidth;
-                    }
                 }
 
                 // ตีกรอบให้อยู่ในท่อ
                 if (p.y < 0) p.y = 0;
                 if (p.y > 1) p.y = 1;
-                if (p.x < 0) p.x = canvas.width;
+
+                if(p.x > canvas.width && smoothedI > 0.005) p.x = 0;
+                if(p.x < 0) p.x = canvas.width;
 
                 let drawY;
                 // บังคับให้ลอดใต้แผ่นวาล์ว
@@ -685,7 +689,8 @@
                 }
 
                 // ยืดเม็ดน้ำเวลาไหลเร็วๆ (Motion Blur)
-                let stretch = (!isBlocked && smoothedI > 0.005) ? Math.max(4, speed * 1.5) : 4;
+                let stretch = Math.max(4, speed * 1.5);
+                if (smoothedI <= 0.005) stretch = 4; // ถ้าหยุดไหลให้กลมเหมือนเดิม
 
                 ctx.beginPath();
                 if(ctx.ellipse) {
