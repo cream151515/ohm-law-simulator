@@ -485,6 +485,21 @@
     </div>
 
     <script>
+        // สร้าง SVG Filter แบบไดนามิก เพื่อสร้างเอฟเฟกต์ "Metaball / หยดน้ำเชื่อมติดกันเป็นของเหลว"
+        if (!document.getElementById('liquid-filter')) {
+            const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+                <defs>
+                    <filter id="liquid-filter">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+                        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6" result="liquid" />
+                        <feComposite in="SourceGraphic" in2="liquid" operator="atop"/>
+                    </filter>
+                </defs>
+            </svg>`;
+            document.body.insertAdjacentHTML('beforeend', svg);
+        }
+
         // DOM Elements
         const sliderV = document.getElementById('sliderV'), sliderR1 = document.getElementById('sliderR1');
         const sliderR2 = document.getElementById('sliderR2'), sliderR3 = document.getElementById('sliderR3');
@@ -509,6 +524,7 @@
         // Canvas Setup
         const canvas = document.getElementById('pipeCanvas');
         const ctx = canvas.getContext('2d');
+        canvas.style.filter = "url('#liquid-filter')";
         
         function resizeCanvas() {
             canvas.width = canvas.parentElement.offsetWidth;
@@ -517,18 +533,16 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // ----------------------------------------------------
+        // PHYSICS ENGINE VARIABLES 
+        // ----------------------------------------------------
+        const MAX_PARTICLES = 650; // เพิ่มจำนวน Max อนุภาค เพื่อให้จุเต็มท่อได้เมื่อกระแสสูงสุด
+        const PARTICLE_RADIUS = 6;
         let particles = [];
-        const numParticles = 80;
-        for(let i = 0; i < numParticles; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random(),
-                speedOffset: 0.8 + (Math.random() * 0.4)
-            });
-        }
-
+        let spawnTimer = 0; 
+        
         let currentI = 0;
-        let smoothedI = 0; // ตัวแปรสำหรับคำนวณแรงเฉื่อย
+        let smoothedI = 0; 
         let gapHeight1 = 60, gapHeight2 = 60, gapHeight3 = 60; 
         let globalV = 24, globalR1 = 100, globalR2 = 0, globalR3 = 0;
 
@@ -542,32 +556,49 @@
             globalR2 = parseFloat(sliderR2.value);
             globalR3 = parseFloat(sliderR3.value);
             
-            // เปลี่ยน Text ให้เป็น Max เพื่อสื่อถึงวาล์วปิดสนิท / ความต้านทานอนันต์
             textV.innerText = globalV; 
             textR1.innerText = globalR1 === 100 ? "Max" : globalR1;
             textR2.innerText = globalR2 === 100 ? "Max" : globalR2; 
             textR3.innerText = globalR3 === 100 ? "Max" : globalR3;
 
-            // หาก R เป็น 100 ให้ถือว่าค่าคือ "อนันต์" (วงจรเปิด วาล์วปิดสนิท)
-            let calcR1 = globalR1 === 100 ? 1000000 : globalR1;
-            let calcR2 = globalR2 === 100 ? 1000000 : globalR2;
-            let calcR3 = globalR3 === 100 ? 1000000 : globalR3;
+            // ==========================================
+            // สมการวงจร (Ohm's Law & Circuit Status)
+            // ==========================================
+            let blockedAt = 0; 
+            if (globalR1 === 100) blockedAt = 1;
+            else if (globalR2 === 100) blockedAt = 2;
+            else if (globalR3 === 100) blockedAt = 3;
 
-            // คำนวณกฎของโอห์ม
-            let R_total = calcR1 + calcR2 + calcR3;
-            currentI = R_total > 0 ? globalV / R_total : globalV / 0.1;
-            
-            let V_drop1 = R_total > 0 ? currentI * calcR1 : globalV / 3;
-            let V_drop2 = R_total > 0 ? currentI * calcR2 : globalV / 3;
-            let V_drop3 = R_total > 0 ? currentI * calcR3 : globalV / 3;
-            
-            let P1 = globalV;                 
-            let P2 = P1 - V_drop1;      
-            let P3 = P2 - V_drop2;      
+            let V_drop1 = 0, V_drop2 = 0, V_drop3 = 0;
+            let P1 = 0, P2 = 0, P3 = 0;
+
+            if (blockedAt > 0) {
+                currentI = 0;
+                
+                if (blockedAt === 1) V_drop1 = globalV;
+                else if (blockedAt === 2) V_drop2 = globalV;
+                else if (blockedAt === 3) V_drop3 = globalV;
+
+                P1 = globalV;
+                P2 = (blockedAt >= 2) ? globalV : 0;
+                P3 = (blockedAt >= 3) ? globalV : 0;
+                
+            } else {
+                let R_total = globalR1 + globalR2 + globalR3;
+                currentI = R_total > 0 ? globalV / R_total : (globalV > 0 ? globalV / 0.1 : 0);
+                
+                V_drop1 = R_total > 0 ? currentI * globalR1 : globalV / 3;
+                V_drop2 = R_total > 0 ? currentI * globalR2 : globalV / 3;
+                V_drop3 = R_total > 0 ? currentI * globalR3 : globalV / 3;
+                
+                P1 = globalV;                 
+                P2 = P1 - V_drop1;      
+                P3 = P2 - V_drop2;      
+            }
 
             if(globalV === 0) { P1 = 0; P2 = 0; P3 = 0; }
 
-            // อัปเดต UI 
+            // อัปเดต Dashboard
             dashI.innerText = currentI.toFixed(2) + " A";
             dashDrop1.innerText = V_drop1.toFixed(2) + " V";
             dashDrop2.innerText = V_drop2.toFixed(2) + " V";
@@ -578,7 +609,7 @@
             val3.innerText = P3.toFixed(1) + " V";
             
             if(globalV === 0) dashStatus.innerText = "Power Off";
-            else if(globalR1 === 100 || globalR2 === 100 || globalR3 === 100) dashStatus.innerText = "Blocked / Open Circuit";
+            else if(blockedAt > 0) dashStatus.innerText = "Blocked / Open Circuit";
             else dashStatus.innerText = "Normal Flow";
 
             wc1.style.height = (P1 / 24 * 100) + "%";
@@ -589,17 +620,11 @@
             ndl2.style.transform = `rotate(${getRotation(P2)}deg)`;
             ndl3.style.transform = `rotate(${getRotation(P3)}deg)`;
             
-            // ถ้าถึง 100 ให้แผ่นวาล์วปิดท่อ 100% เลย (ความสูง 60px)
-            let gateDrop1 = globalR1 === 100 ? 60 : (globalR1 / 100) * 58; 
-            valveGate1.style.height = gateDrop1 + "px"; gapHeight1 = Math.max(1, 60 - gateDrop1); 
-            
-            let gateDrop2 = globalR2 === 100 ? 60 : (globalR2 / 100) * 58; 
-            valveGate2.style.height = gateDrop2 + "px"; gapHeight2 = Math.max(1, 60 - gateDrop2); 
-            
-            let gateDrop3 = globalR3 === 100 ? 60 : (globalR3 / 100) * 58; 
-            valveGate3.style.height = gateDrop3 + "px"; gapHeight3 = Math.max(1, 60 - gateDrop3); 
+            let gateDrop1 = globalR1 === 100 ? 60 : (globalR1 / 100) * 58; valveGate1.style.height = gateDrop1 + "px"; gapHeight1 = Math.max(1, 60 - gateDrop1); 
+            let gateDrop2 = globalR2 === 100 ? 60 : (globalR2 / 100) * 58; valveGate2.style.height = gateDrop2 + "px"; gapHeight2 = Math.max(1, 60 - gateDrop2); 
+            let gateDrop3 = globalR3 === 100 ? 60 : (globalR3 / 100) * 58; valveGate3.style.height = gateDrop3 + "px"; gapHeight3 = Math.max(1, 60 - gateDrop3); 
 
-            if(currentI > 0.001 && globalV > 0) {
+            if(currentI > 0 && globalV > 0) {
                 circuitPath.classList.add('active');
                 circuitPath.style.animationDuration = Math.max(0.1, 2.5 / currentI) + 's';
             } else {
@@ -608,95 +633,223 @@
             }
         }
 
-        // แอนิเมชันของเหลว
+        function checkValveCollision(p, vCenter, gapH, height) {
+            let vWidth = 8; 
+            let gateBottomY = height - gapH;
+            if (gapH < 12) gateBottomY = height + 10; 
+
+            if (p.x + PARTICLE_RADIUS > vCenter - vWidth && p.x - PARTICLE_RADIUS < vCenter + vWidth) {
+                if (p.y - PARTICLE_RADIUS < gateBottomY) {
+                    if (p.x < vCenter) {
+                        p.x = vCenter - vWidth - PARTICLE_RADIUS;
+                        p.vx = -Math.abs(p.vx) * 0.3; 
+                    } else {
+                        p.x = vCenter + vWidth + PARTICLE_RADIUS;
+                        p.vx = Math.abs(p.vx) * 0.3;
+                    }
+                } else {
+                    if (p.vx > 0) p.vx += 0.1; 
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // MAIN PHYSICS & RENDER LOOP
+        // ----------------------------------------------------
         function drawParticles() {
-            // สร้างความสมูทของความเร็ว (แรงเฉื่อย)
-            smoothedI += (currentI - smoothedI) * 0.1;
+            // ควบคุมความเร็ว I สำหรับฟิสิกส์ (ป้องกันเอนจินพังเวลา I พุ่งทะลุ 240)
+            let physicsI = Math.min(currentI, 25); 
+            
+            if (currentI === 0) {
+                smoothedI = 0;
+            } else {
+                smoothedI += (physicsI - smoothedI) * 0.15; // เกลี่ยความเร็วให้สมูท
+            }
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             let w = canvas.width;
+            let h = canvas.height;
             let v1X = w * 0.25; 
             let v2X = w * 0.50; 
             let v3X = w * 0.75;
-            let valveWidth = 20;
+            let valveWidth = 8;
 
-            // วาดสีพื้นของเหลว (ให้ดูเหมือนมีน้ำเต็มท่อ)
-            ctx.fillStyle = 'rgba(26, 115, 232, 0.15)'; ctx.fillRect(0, 0, v1X, canvas.height);
-            ctx.fillStyle = 'rgba(0, 188, 212, 0.15)';  ctx.fillRect(v1X, 0, v2X - v1X, canvas.height);
-            ctx.fillStyle = 'rgba(139, 195, 74, 0.15)'; ctx.fillRect(v2X, 0, v3X - v2X, canvas.height);
-            ctx.fillStyle = 'rgba(52, 168, 83, 0.15)';  ctx.fillRect(v3X, 0, w - v3X, canvas.height);
-            
-            // หาจุดที่โดนบล็อก (วาล์วปิดสนิท เช่น R == 100) ตัวแรกที่เจอ
-            let blockX = w + 100; // ปกติไม่บล็อก
-            if (globalR1 === 100) blockX = v1X - 10;
-            else if (globalR2 === 100) blockX = v2X - 10;
-            else if (globalR3 === 100) blockX = v3X - 10;
+            let isBlocked = (globalR1 === 100 || globalR2 === 100 || globalR3 === 100);
+            let blockX = w + 100; 
+            if (globalR1 === 100) blockX = v1X;
+            else if (globalR2 === 100) blockX = v2X;
+            else if (globalR3 === 100) blockX = v3X;
 
-            particles.forEach(p => {
-                let speed = smoothedI * 3 * p.speedOffset;
+            // ==========================================
+            // อนิเมชั่นสีพื้นหลัง (แสดงผลเต็มท่ออัตโนมัติตามความเร็ว/สถานะ)
+            // ==========================================
+            // ถ้า I สูงมาก ให้เพิ่มความเข้ม (Opacity) ให้ดูน้ำแน่นๆ เต็มท่อ (Max Flow Rendering)
+            let flowOp = 0.10;
+            if (currentI > 0 && !isBlocked) {
+                flowOp = 0.10 + Math.min(currentI / 150, 0.35); // สูงสุดที่ 0.45 ให้เห็นสีสดเต็มท่อ
+            }
+
+            let bg1 = `rgba(26, 115, 232, ${flowOp})`;
+            let bg2 = `rgba(0, 188, 212, ${flowOp})`;
+            let bg3 = `rgba(139, 195, 74, ${flowOp})`;
+            let bg4 = `rgba(52, 168, 83, ${flowOp})`;
+
+            if (currentI === 0 && globalV > 0 && isBlocked) {
+                if (blockX >= v1X) bg1 = 'rgba(26, 115, 232, 1.0)';
+                if (blockX >= v2X) bg2 = 'rgba(0, 188, 212, 1.0)';
+                if (blockX >= v3X) bg3 = 'rgba(139, 195, 74, 1.0)';
                 
-                let inV1 = (p.x > v1X - valveWidth && p.x < v1X + valveWidth);
-                let inV2 = (p.x > v2X - valveWidth && p.x < v2X + valveWidth);
-                let inV3 = (p.x > v3X - valveWidth && p.x < v3X + valveWidth);
+                if (blockX === v1X) { bg2 = 'rgba(0,0,0,0)'; bg3 = 'rgba(0,0,0,0)'; bg4 = 'rgba(0,0,0,0)'; }
+                else if (blockX === v2X) { bg3 = 'rgba(0,0,0,0)'; bg4 = 'rgba(0,0,0,0)'; }
+                else if (blockX === v3X) { bg4 = 'rgba(0,0,0,0)'; }
+            } else if (globalV === 0) {
+                bg1 = 'rgba(26, 115, 232, 0)'; bg2 = 'rgba(0, 188, 212, 0)'; bg3 = 'rgba(139, 195, 74, 0)'; bg4 = 'rgba(52, 168, 83, 0)';
+            }
 
-                if(inV1) speed *= (60 / gapHeight1); 
-                else if(inV2) speed *= (60 / gapHeight2); 
-                else if(inV3) speed *= (60 / gapHeight3); 
-                
-                // ถ้าน้ำไหลปกติ (กระแสเกิน 0.005)
-                if (smoothedI > 0.005) {
-                    p.x += speed + (Math.random() - 0.5) * 0.2; // ไหลไปข้างหน้า
-                    p.y += (Math.random() - 0.5) * 0.01;
-                } else {
-                    // ถ้าน้ำหยุดไหล (กระแสเข้าใกล้ 0)
-                    if (globalV > 0 && p.x < blockX) {
-                        // ถ้ามีแรงดัน (V>0) แต่วาล์วปิด ให้ดันน้ำก่อนหน้าวาล์วไป "กองรวมกัน" ที่หน้าวาล์ว
-                        p.x += Math.random() * 0.4; 
-                        if (p.x > blockX) {
-                            p.x = blockX - (Math.random() * 12); // ชนวาล์วแล้วกองกันไว้
+            ctx.fillStyle = bg1; ctx.fillRect(0, 0, v1X, h);
+            ctx.fillStyle = bg2; ctx.fillRect(v1X, 0, v2X - v1X, h);
+            ctx.fillStyle = bg3; ctx.fillRect(v2X, 0, v3X - v2X, h);
+            ctx.fillStyle = bg4; ctx.fillRect(v3X, 0, w - v3X, h);
+
+            if (currentI === 0) {
+                // ==========================================
+                // สภาวะ I = 0 (หยุดนิ่ง)
+                // ==========================================
+                if (globalV > 0 && isBlocked) {
+                    particles = particles.filter(p => p.x <= blockX);
+                    let targetCount = Math.floor((blockX / w) * MAX_PARTICLES);
+                    if (particles.length < targetCount) {
+                        for(let i = 0; i < 5; i++) {
+                            particles.push({
+                                x: Math.random() * blockX,
+                                y: Math.random() * (h - PARTICLE_RADIUS * 2) + PARTICLE_RADIUS,
+                                vx: 0,
+                                vy: 0,
+                                speedOffset: 0.8 + (Math.random() * 0.4)
+                            });
                         }
                     }
-                    // สั่นลอยตัวเบาๆ เหมือนของเหลวปกติ
-                    p.x += (Math.random() - 0.5) * 0.05;
-                    p.y += (Math.random() - 0.5) * 0.005;
+                } else if (globalV === 0) {
+                    particles.forEach(p => { p.vy += 0.2; p.y += p.vy; });
+                    particles = particles.filter(p => p.y < h + 20);
+                }
+                
+                particles.forEach(p => { p.vx = 0; p.vy = 0; });
+                
+            } else {
+                // ==========================================
+                // สภาวะ I > 0 (Normal / Max Flow)
+                // ==========================================
+                if (globalV > 0) {
+                    let pumpRate = (globalV / 24) * 3.0; 
+                    if (!isBlocked && smoothedI > 0) {
+                        // บูสต์อัตราสูบน้ำเข้าเมื่อไฟแรง ป้องกันช่องโหว่ว่างเปล่า
+                        pumpRate += smoothedI * 2.5; 
+                    }
+
+                    if (particles.length < MAX_PARTICLES) {
+                        spawnTimer += pumpRate; 
+                        while (spawnTimer > 1) {
+                            particles.push({
+                                x: Math.random() * 5, 
+                                y: Math.random() * (h - PARTICLE_RADIUS * 2) + PARTICLE_RADIUS,
+                                // อัดความเร็วพุ่งออกปั๊มให้สอดคล้องกับค่า I
+                                vx: 2 + Math.random() * 5 + (smoothedI * 0.8), 
+                                vy: (Math.random() - 0.5) * 2,
+                                speedOffset: 0.8 + (Math.random() * 0.4)
+                            });
+                            spawnTimer -= 1;
+                        }
+                    }
                 }
 
-                // ตีกรอบให้อยู่ในท่อ
-                if (p.y < 0) p.y = 0;
-                if (p.y > 1) p.y = 1;
+                // Physics Constraints
+                const rSq = (PARTICLE_RADIUS * 2.2) * (PARTICLE_RADIUS * 2.2);
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.vy += 0.15; 
+                    
+                    if (globalV > 0 && p.x < blockX) {
+                        p.vx += 0.2 * (globalV / 24); 
+                    }
+                    
+                    if (smoothedI > 0.005) {
+                        p.vx += (smoothedI * 1.5 * p.speedOffset); 
+                    }
+                    
+                    // BOUNDARY CHECK: ป้องกัน Physics แหกตอน I = Max (Speed Capping)
+                    if (p.vx > 35) p.vx = 35; 
+                    
+                    p.vx *= 0.90; 
+                    p.vy *= 0.95; 
+                    
+                    p.vx += (Math.random() - 0.5) * 0.1;
+                    p.y += (Math.random() - 0.5) * 0.1;
+                    
+                    p.x += p.vx;
+                    p.y += p.vy;
 
-                if(p.x > canvas.width && smoothedI > 0.005) p.x = 0;
-                if(p.x < 0) p.x = canvas.width;
-
-                let drawY;
-                // บังคับให้ลอดใต้แผ่นวาล์ว
-                if(inV1) {
-                    drawY = canvas.height - gapHeight1 + 4 + (p.y * (gapHeight1 - 8)); 
-                    ctx.fillStyle = '#f1c40f'; 
-                } else if(inV2) {
-                    drawY = canvas.height - gapHeight2 + 4 + (p.y * (gapHeight2 - 8)); 
-                    ctx.fillStyle = '#f1c40f'; 
-                } else if(inV3) {
-                    drawY = canvas.height - gapHeight3 + 4 + (p.y * (gapHeight3 - 8)); 
-                    ctx.fillStyle = '#f1c40f'; 
-                } else {
-                    drawY = 4 + p.y * (canvas.height - 8);
-                    if (p.x >= v3X + valveWidth) ctx.fillStyle = '#34a853'; 
-                    else if (p.x >= v2X + valveWidth) ctx.fillStyle = '#8bc34a'; 
-                    else if (p.x >= v1X + valveWidth) ctx.fillStyle = '#00bcd4'; 
-                    else ctx.fillStyle = '#1a73e8'; 
+                    if (p.y > h - PARTICLE_RADIUS) { p.y = h - PARTICLE_RADIUS; p.vy *= -0.4; p.vx *= 0.8; }
+                    if (p.y < PARTICLE_RADIUS) { p.y = PARTICLE_RADIUS; p.vy *= -0.4; p.vx *= 0.8; }
+                    if (p.x < PARTICLE_RADIUS) { p.x = PARTICLE_RADIUS; p.vx = Math.abs(p.vx) * 0.5; }
+                    
+                    let gap1 = gapHeight1 < 12 ? -10 : gapHeight1; 
+                    let gap2 = gapHeight2 < 12 ? -10 : gapHeight2;
+                    let gap3 = gapHeight3 < 12 ? -10 : gapHeight3;
+                    checkValveCollision(p, v1X, gap1, h);
+                    checkValveCollision(p, v2X, gap2, h);
+                    checkValveCollision(p, v3X, gap3, h);
                 }
+                
+                // Particle Interaction 
+                for (let i = 0; i < particles.length; i++) {
+                    let p1 = particles[i];
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j];
+                        let dx = p2.x - p1.x;
+                        let dy = p2.y - p1.y;
+                        let distSq = dx * dx + dy * dy;
+                        if (distSq < rSq) {
+                            let dist = Math.sqrt(distSq) || 0.01;
+                            let overlap = (PARTICLE_RADIUS * 2.2) - dist;
+                            let force = overlap * 0.3; 
+                            let nx = dx / dist;
+                            let ny = dy / dist;
+                            let fx = nx * force;
+                            let fy = ny * force;
+                            p1.x -= fx; p1.y -= fy;
+                            p2.x += fx; p2.y += fy;
+                            let dvx = p1.vx - p2.vx;
+                            let dvy = p1.vy - p2.vy;
+                            p1.vx -= dvx * 0.05; p1.vy -= dvy * 0.05;
+                            p2.vx += dvx * 0.05; p2.vy += dvy * 0.05;
+                        }
+                    }
+                }
+                particles = particles.filter(p => p.x < w + 20);
+            }
 
-                // ยืดเม็ดน้ำเวลาไหลเร็วๆ (Motion Blur)
-                let stretch = Math.max(4, speed * 1.5);
-                if (smoothedI <= 0.005) stretch = 4; // ถ้าหยุดไหลให้กลมเหมือนเดิม
-
+            // 5. Draw
+            particles.forEach(p => {
+                if (p.x > v3X + valveWidth) ctx.fillStyle = '#34a853'; 
+                else if (p.x > v2X + valveWidth) ctx.fillStyle = '#8bc34a'; 
+                else if (p.x > v1X + valveWidth) ctx.fillStyle = '#00bcd4'; 
+                else ctx.fillStyle = '#1a73e8'; 
+                
                 ctx.beginPath();
-                if(ctx.ellipse) {
-                    ctx.ellipse(p.x, drawY, stretch, 4, 0, 0, Math.PI * 2);
+                let vMag = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+                
+                // ยืดความยาวหยดน้ำตามความเร็ว เมื่อไหลแม็กซ์จะกลายเป็นเส้นของเหลวสมบูรณ์ (Motion Blur)
+                let stretch = Math.max(PARTICLE_RADIUS, PARTICLE_RADIUS + vMag * 0.8);
+                
+                if (vMag < 1.0 || currentI === 0) stretch = PARTICLE_RADIUS;
+
+                if (ctx.ellipse && vMag > 1.0 && currentI > 0) {
+                    let angle = Math.atan2(p.vy, p.vx);
+                    ctx.ellipse(p.x, p.y, stretch, PARTICLE_RADIUS, angle, 0, Math.PI * 2);
                 } else {
-                    ctx.arc(p.x, drawY, 4, 0, Math.PI * 2);
+                    ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2);
                 }
                 ctx.fill();
             });
@@ -709,6 +862,7 @@
         sliderR2.addEventListener('input', updateLogic);
         sliderR3.addEventListener('input', updateLogic);
 
+        // Start Application
         updateLogic();
         drawParticles();
     </script>
